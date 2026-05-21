@@ -51,7 +51,10 @@ public class JwtService {
   }
 
   private RSAPrivateKey getPrivateKey() throws NoSuchAlgorithmException, InvalidKeySpecException {
-    String key = privateKey;
+    String key = privateKey.trim();
+    if (!key.contains("BEGIN")) {
+      key = new String(Base64.getDecoder().decode(key));
+    }
     key = key.replace("-----BEGIN PRIVATE KEY-----", "");
     key = key.replace("-----END PRIVATE KEY-----", "");
     key = key.replaceAll(" ", "");
