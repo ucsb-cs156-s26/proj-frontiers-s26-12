@@ -52,8 +52,8 @@ public class JwtService {
 
   private RSAPrivateKey getPrivateKey() throws NoSuchAlgorithmException, InvalidKeySpecException {
 <span class="fc" id="L54">    String key = privateKey.trim();</span>
-<span class="pc bpc" id="L55" title="3 of 6 branches missed.">    if (key.isEmpty() || key.equals(&quot;no-key-present&quot;) || key.contains(&quot;see-instructions&quot;)) {</span>
-<span class="nc" id="L56">      throw new IllegalStateException(</span>
+<span class="fc bfc" id="L55" title="All 6 branches covered.">    if (key.isEmpty() || key.equals(&quot;no-key-present&quot;) || key.contains(&quot;see-instructions&quot;)) {</span>
+<span class="fc" id="L56">      throw new IllegalStateException(</span>
           &quot;GitHub App private key is not configured. Set app_private_key on Dokku or app.private.key in secrets.yaml.&quot;);
     }
 <span class="fc bfc" id="L59" title="All 2 branches covered.">    if (!key.contains(&quot;BEGIN&quot;)) {</span>
