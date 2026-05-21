@@ -50,20 +50,11 @@ public class JwtService {
     this.dateTimeProvider = dateTimeProvider;
   }
 
-  /**
-   * Normalizes private key configuration from PEM or from base64-encoded PEM (common on Dokku,
-   * where multi-line environment variables are often truncated).
-   */
-  private String normalizePrivateKeyMaterial(String key) {
-    key = key.trim();
-    if (!key.contains("BEGIN")) {
-      return new String(Base64.getDecoder().decode(key));
-    }
-    return key;
-  }
-
   private RSAPrivateKey getPrivateKey() throws NoSuchAlgorithmException, InvalidKeySpecException {
-    String key = normalizePrivateKeyMaterial(privateKey);
+    String key = privateKey.trim();
+    if (!key.contains("BEGIN")) {
+      key = new String(Base64.getDecoder().decode(key));
+    }
     key = key.replace("-----BEGIN PRIVATE KEY-----", "");
     key = key.replace("-----END PRIVATE KEY-----", "");
     key = key.replaceAll(" ", "");
