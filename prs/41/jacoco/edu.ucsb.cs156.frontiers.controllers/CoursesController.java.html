@@ -507,14 +507,31 @@ import org.springframework.web.bind.annotation.*;
 <span class="fc" id="L507">    return new InstructorCourseView(savedCourse);</span>
   }
 
+  @Operation(summary = &quot;Get course warnings&quot;)
   @GetMapping(&quot;/warnings/{courseId}&quot;)
   @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
-  public CourseWarning warnings(@PathVariable Long courseId) throws Exception {
-<span class="fc" id="L513">    Course course =</span>
+  public CourseWarning warnings(@PathVariable @Parameter Long courseId) throws Exception {
+<span class="fc" id="L514">    Course course =</span>
         courseRepository
-<span class="fc" id="L515">            .findById(courseId)</span>
-<span class="fc" id="L516">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
-<span class="fc" id="L517">    return linkerService.checkCourseWarnings(course);</span>
+<span class="fc" id="L516">            .findById(courseId)</span>
+<span class="fc" id="L517">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+<span class="fc" id="L518">    return linkerService.checkCourseWarnings(course);</span>
+  }
+
+  @Operation(summary = &quot;Hide base permission warning for a course&quot;)
+  @PreAuthorize(&quot;@CourseSecurity.hasManagePermissions(#root, #courseId)&quot;)
+  @PostMapping(&quot;/warnings/hideBasePermissionWarning/{courseId}&quot;)
+  public Object hideBasePermissionWarning(@PathVariable @Parameter Long courseId) {
+<span class="fc" id="L525">    Course course =</span>
+        courseRepository
+<span class="fc" id="L527">            .findById(courseId)</span>
+<span class="fc" id="L528">            .orElseThrow(() -&gt; new EntityNotFoundException(Course.class, courseId));</span>
+
+<span class="fc" id="L530">    course.setHideBasePermissionWarning(true);</span>
+<span class="fc" id="L531">    courseRepository.save(course);</span>
+
+<span class="fc" id="L533">    return genericMessage(</span>
+<span class="fc" id="L534">        &quot;hideBasePermissionWarning set to true for course with id %s&quot;.formatted(courseId));</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
