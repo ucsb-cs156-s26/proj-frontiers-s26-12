@@ -45,6 +45,9 @@ describe("InstructorCourseShowPage tests", () => {
       canvasCourseId: "",
     });
     axiosMock.onGet("/api/jobs/course").reply(200, []);
+    axiosMock
+      .onGet("/api/github/graphql/defaultbasepermission")
+      .reply(200, "none");
   });
 
   const setupInstructorUser = () => {
@@ -556,5 +559,122 @@ describe("InstructorCourseShowPage tests", () => {
     await screen.findByText("CMPSC 156");
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  test("displays default base permission on course header when linked to GitHub org", async () => {
+    setupInstructorUser();
+
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+
+    axiosMock
+      .onGet("/api/github/graphql/defaultbasepermission")
+      .reply(200, "read");
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId(
+      "InstructorCourseShowPage-default-base-permission-value",
+    );
+
+    expect(screen.getByText("Default Base Permission")).toBeInTheDocument();
+    expect(
+      screen.getByTestId(
+        "InstructorCourseShowPage-default-base-permission-value",
+      ),
+    ).toHaveTextContent("Read");
+
+    const defaultPermissionRequests = axiosMock.history.get.filter(
+      (request) =>
+        request.url === "/api/github/graphql/defaultbasepermission" &&
+        request.params?.courseId === "7",
+    );
+    expect(defaultPermissionRequests).toHaveLength(1);
+  });
+
+  test.each([
+    ["none", "None"],
+    ["write", "Write"],
+  ])(
+    "displays %s as %s on course header",
+    async (apiValue, displayValue) => {
+      setupInstructorUser();
+
+      axiosMock
+        .onGet("/api/courses/7")
+        .reply(200, coursesFixtures.severalCourses[0]);
+
+      axiosMock
+        .onGet("/api/github/graphql/defaultbasepermission")
+        .reply(200, apiValue);
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+            <Routes>
+              <Route
+                path="/instructor/courses/:id"
+                element={<InstructorCourseShowPage />}
+              />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+
+      await screen.findByTestId(
+        "InstructorCourseShowPage-default-base-permission-value",
+      );
+
+      expect(
+        screen.getByTestId(
+          "InstructorCourseShowPage-default-base-permission-value",
+        ),
+      ).toHaveTextContent(displayValue);
+    },
+  );
+
+  test("does not display default base permission when course has no linked GitHub org", async () => {
+    setupInstructorUser();
+
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[2]);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("CMPSC 156");
+
+    expect(
+      screen.queryByTestId("InstructorCourseShowPage-default-base-permission"),
+    ).not.toBeInTheDocument();
+
+    const defaultPermissionRequests = axiosMock.history.get.filter(
+      (request) =>
+        request.url === "/api/github/graphql/defaultbasepermission",
+    );
+    expect(defaultPermissionRequests).toHaveLength(0);
   });
 });

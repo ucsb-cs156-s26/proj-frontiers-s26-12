@@ -16,6 +16,59 @@ import { CourseWarningBanner } from "main/components/Courses/CourseWarningBanner
 import SettingsTabComponent from "main/components/TabComponent/SettingsTabComponent";
 import JobTabComponent from "main/components/TabComponent/JobTabComponent";
 
+function formatDefaultBasePermission(permission) {
+  if (permission == null || typeof permission !== "string") {
+    return null;
+  }
+  const trimmed = permission.trim().toLowerCase();
+  switch (trimmed) {
+    case "none":
+      return "None";
+    case "read":
+      return "Read";
+    case "write":
+      return "Write";
+    default:
+      return (
+        permission.charAt(0).toUpperCase() + permission.slice(1).toLowerCase()
+      );
+  }
+}
+
+function DefaultBasePermissionOnCourseHeader({ courseId, testId }) {
+  const { data: defaultBasePermissionRaw } = useBackend(
+    ["/api/github/graphql/defaultbasepermission", courseId],
+    {
+      method: "GET",
+      url: "/api/github/graphql/defaultbasepermission",
+      params: { courseId },
+    },
+    undefined,
+    true,
+    {
+      staleTime: Infinity,
+    },
+  );
+
+  const defaultBasePermissionDisplay = formatDefaultBasePermission(
+    defaultBasePermissionRaw,
+  );
+
+  if (!defaultBasePermissionDisplay) {
+    return null;
+  }
+
+  return (
+    <div data-testid={`${testId}-default-base-permission`}>
+      <span className="text-muted">Default Base Permission</span>
+      {": "}
+      <span data-testid={`${testId}-default-base-permission-value`}>
+        {defaultBasePermissionDisplay}
+      </span>
+    </div>
+  );
+}
+
 export default function InstructorCourseShowPage() {
   const currentUser = useCurrentUser();
   const courseId = useParams().id;
@@ -35,6 +88,8 @@ export default function InstructorCourseShowPage() {
   );
 
   const getCourseFailed = courseBackendFailureCount > 0;
+
+  const linkedGithubOrg = Boolean(course?.orgName && course?.installationId);
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -133,6 +188,12 @@ export default function InstructorCourseShowPage() {
                     </OverlayTrigger>
                   )}
                 </div>
+              )}
+              {linkedGithubOrg && (
+                <DefaultBasePermissionOnCourseHeader
+                  courseId={courseId}
+                  testId={testId}
+                />
               )}
             </div>
           </div>

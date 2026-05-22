@@ -34,6 +34,7 @@ const Template = () => <InstructorCourseShowPage />;
 const exampleCourse = {
   ...coursesFixtures.oneCourseWithEachStatus[0],
   id: 7,
+  installationId: "123456",
   createdByEmail: "phtcon@ucsb.edu",
 };
 
@@ -57,6 +58,13 @@ const basicHandlers = [
     return HttpResponse.json(exampleCourse, {
       status: 200,
     });
+  }),
+  http.get("/api/github/graphql/defaultbasepermission", ({ request }) => {
+    const url = new URL(request.url);
+    if (url.searchParams.get("courseId") === "7") {
+      return new HttpResponse("read", { status: 200 });
+    }
+    return new HttpResponse("none", { status: 200 });
   }),
   http.post("/api/repos/createRepos", ({ request }) => {
     window.alert(
