@@ -604,6 +604,72 @@ describe("InstructorCourseShowPage tests", () => {
     expect(defaultPermissionRequests).toHaveLength(1);
   });
 
+  test("capitalizes unknown default base permission values on course header", async () => {
+    setupInstructorUser();
+
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+
+    axiosMock
+      .onGet("/api/github/graphql/defaultbasepermission")
+      .reply(200, "admin");
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId(
+      "InstructorCourseShowPage-default-base-permission-value",
+    );
+
+    expect(
+      screen.getByTestId(
+        "InstructorCourseShowPage-default-base-permission-value",
+      ),
+    ).toHaveTextContent("Admin");
+  });
+
+  test("does not display default base permission when API returns null", async () => {
+    setupInstructorUser();
+
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+
+    axiosMock
+      .onGet("/api/github/graphql/defaultbasepermission")
+      .reply(200, null);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("CMPSC 156");
+
+    expect(
+      screen.queryByTestId("InstructorCourseShowPage-default-base-permission"),
+    ).not.toBeInTheDocument();
+  });
+
   test.each([
     ["none", "None"],
     ["write", "Write"],
