@@ -607,43 +607,40 @@ describe("InstructorCourseShowPage tests", () => {
   test.each([
     ["none", "None"],
     ["write", "Write"],
-  ])(
-    "displays %s as %s on course header",
-    async (apiValue, displayValue) => {
-      setupInstructorUser();
+  ])("displays %s as %s on course header", async (apiValue, displayValue) => {
+    setupInstructorUser();
 
-      axiosMock
-        .onGet("/api/courses/7")
-        .reply(200, coursesFixtures.severalCourses[0]);
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
 
-      axiosMock
-        .onGet("/api/github/graphql/defaultbasepermission")
-        .reply(200, apiValue);
+    axiosMock
+      .onGet("/api/github/graphql/defaultbasepermission")
+      .reply(200, apiValue);
 
-      render(
-        <QueryClientProvider client={queryClient}>
-          <MemoryRouter initialEntries={["/instructor/courses/7"]}>
-            <Routes>
-              <Route
-                path="/instructor/courses/:id"
-                element={<InstructorCourseShowPage />}
-              />
-            </Routes>
-          </MemoryRouter>
-        </QueryClientProvider>,
-      );
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
 
-      await screen.findByTestId(
+    await screen.findByTestId(
+      "InstructorCourseShowPage-default-base-permission-value",
+    );
+
+    expect(
+      screen.getByTestId(
         "InstructorCourseShowPage-default-base-permission-value",
-      );
-
-      expect(
-        screen.getByTestId(
-          "InstructorCourseShowPage-default-base-permission-value",
-        ),
-      ).toHaveTextContent(displayValue);
-    },
-  );
+      ),
+    ).toHaveTextContent(displayValue);
+  });
 
   test("does not display default base permission when course has no linked GitHub org", async () => {
     setupInstructorUser();
@@ -672,8 +669,7 @@ describe("InstructorCourseShowPage tests", () => {
     ).not.toBeInTheDocument();
 
     const defaultPermissionRequests = axiosMock.history.get.filter(
-      (request) =>
-        request.url === "/api/github/graphql/defaultbasepermission",
+      (request) => request.url === "/api/github/graphql/defaultbasepermission",
     );
     expect(defaultPermissionRequests).toHaveLength(0);
   });
