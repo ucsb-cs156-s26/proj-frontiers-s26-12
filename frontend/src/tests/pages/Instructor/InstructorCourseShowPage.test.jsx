@@ -17,6 +17,7 @@ import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 import { rosterStudentFixtures } from "fixtures/rosterStudentFixtures";
 import { expect, vi } from "vitest";
+import * as useBackendModule from "main/utils/useBackend";
 
 const mockedNavigate = vi.fn();
 vi.mock("react-router", async (importOriginal) => ({
@@ -561,6 +562,37 @@ describe("InstructorCourseShowPage tests", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  test("renders loading state while course is loading without crashing", async () => {
+    setupInstructorUser();
+
+    axiosMock.onGet("/api/courses/7").reply(
+      () =>
+        new Promise(() => {
+          /* never resolves — course stays null while loading */
+        }),
+    );
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(
+      screen.getByTestId("InstructorCourseShowPage-loading"),
+    ).toHaveTextContent("Course: Loading...");
+    expect(
+      screen.queryByTestId("InstructorCourseShowPage-default-base-permission"),
+    ).not.toBeInTheDocument();
+  });
+
   test("displays default base permission on course header when linked to GitHub org", async () => {
     setupInstructorUser();
 
@@ -589,7 +621,12 @@ describe("InstructorCourseShowPage tests", () => {
       "InstructorCourseShowPage-default-base-permission-value",
     );
 
-    expect(screen.getByText("Default Base Permission")).toBeInTheDocument();
+    const defaultBasePermissionBlock = screen.getByTestId(
+      "InstructorCourseShowPage-default-base-permission",
+    );
+    expect(defaultBasePermissionBlock.textContent).toBe(
+      "Default Base Permission: Read",
+    );
     expect(
       screen.getByTestId(
         "InstructorCourseShowPage-default-base-permission-value",
@@ -706,6 +743,87 @@ describe("InstructorCourseShowPage tests", () => {
         "InstructorCourseShowPage-default-base-permission-value",
       ),
     ).toHaveTextContent(displayValue);
+  });
+
+  test("calls useBackend for default base permission with correct parameters", async () => {
+    const useBackendSpy = vi.spyOn(useBackendModule, "useBackend");
+    setupInstructorUser();
+
+    axiosMock
+      .onGet("/api/courses/7")
+      .reply(200, coursesFixtures.severalCourses[0]);
+
+    axiosMock
+      .onGet("/api/github/graphql/defaultbasepermission")
+      .reply(200, "read");
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId(
+      "InstructorCourseShowPage-default-base-permission-value",
+    );
+
+    expect(useBackendSpy).toHaveBeenCalledWith(
+      ["/api/github/graphql/defaultbasepermission", "7"],
+      {
+        method: "GET",
+        url: "/api/github/graphql/defaultbasepermission",
+        params: { courseId: "7" },
+      },
+      undefined,
+      true,
+      { staleTime: Infinity },
+    );
+
+    useBackendSpy.mockRestore();
+  });
+
+  test("does not display default base permission when orgName is set but installationId is missing", async () => {
+    setupInstructorUser();
+
+    axiosMock.onGet("/api/courses/7").reply(200, {
+      ...coursesFixtures.oneCourseWithEachStatus[0],
+      id: 7,
+      orgName: "ucsb-cs156-s25",
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={["/instructor/courses/7"]}>
+          <Routes>
+            <Route
+              path="/instructor/courses/:id"
+              element={<InstructorCourseShowPage />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    await screen.findByTestId("InstructorCourseShowPage-github-org-link");
+
+    expect(
+      screen.queryByTestId("InstructorCourseShowPage-default-base-permission"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("InstructorCourseShowPage-github-settings-link"),
+    ).not.toBeInTheDocument();
+
+    const defaultPermissionRequests = axiosMock.history.get.filter(
+      (request) => request.url === "/api/github/graphql/defaultbasepermission",
+    );
+    expect(defaultPermissionRequests).toHaveLength(0);
   });
 
   test("does not display default base permission when course has no linked GitHub org", async () => {
