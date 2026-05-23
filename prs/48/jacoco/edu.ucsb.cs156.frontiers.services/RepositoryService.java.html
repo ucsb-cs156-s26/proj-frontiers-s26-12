@@ -220,7 +220,7 @@ public class RepositoryService {
 <span class="fc" id="L220">      ResponseEntity&lt;String&gt; response =</span>
 <span class="fc" id="L221">          restTemplate.exchange(endpoint, HttpMethod.GET, entity, String.class);</span>
 <span class="fc" id="L222">      JsonNode commits = mapper.readTree(response.getBody());</span>
-<span class="pc bpc" id="L223" title="1 of 4 branches missed.">      return commits.isArray() &amp;&amp; commits.isEmpty();</span>
+<span class="fc bfc" id="L223" title="All 4 branches covered.">      return commits.isArray() &amp;&amp; commits.isEmpty();</span>
 <span class="fc" id="L224">    } catch (HttpClientErrorException e) {</span>
 <span class="fc bfc" id="L225" title="All 2 branches covered.">      if (e.getStatusCode().equals(HttpStatus.CONFLICT)) {</span>
 <span class="fc" id="L226">        return true;</span>
