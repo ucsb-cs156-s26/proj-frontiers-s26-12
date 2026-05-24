@@ -174,6 +174,7 @@ export default function InstructorCourseShowPage({
         </Tab>
         <Tab eventKey={"jobs"} title={"Jobs"} className="pt-2">
           <JobTabComponent courseId={courseId} testIdPrefix={testId} />
+        </Tab>
         <Tab eventKey={"downloads"} title={"Downloads"} className="pt-2">
           <DownloadsTabComponent courseId={courseId} testIdPrefix={testId} />
         </Tab>
