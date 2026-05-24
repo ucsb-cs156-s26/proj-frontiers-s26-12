@@ -8,8 +8,8 @@ export default function DownloadsTabComponent({ courseId, testIdPrefix }) {
   };
 
   const handleSubmit = () => {
-    console.log(`Frontend form submit action captured for course: ${courseId}`);
     onSuccessDownloadTriggered();
+    window.location.href = `/api/csv/rosterstudents?courseId=${courseId}`;
   };
 
   return (
