@@ -86,25 +86,31 @@ public class OrganizationLinkerService {
   }
 
   public CourseWarning checkCourseWarnings(Course course)
-      throws NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+      throws NoSuchAlgorithmException,
+          InvalidKeySpecException,
+          JsonProcessingException,
+          NoLinkedOrganizationException {
 
-<span class="fc bfc" id="L91" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
-<span class="fc" id="L92">      return new CourseWarning(false);</span>
+<span class="fc bfc" id="L94" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
+<span class="fc" id="L95">      return new CourseWarning(false, false);</span>
     }
 
-<span class="fc" id="L95">    String ENDPOINT = &quot;https://api.github.com/orgs/&quot; + course.getOrgName();</span>
-<span class="fc" id="L96">    HttpHeaders headers = new HttpHeaders();</span>
-<span class="fc" id="L97">    String token = jwtService.getInstallationToken(course);</span>
-<span class="fc" id="L98">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
-<span class="fc" id="L99">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
-<span class="fc" id="L100">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
-<span class="fc" id="L101">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
-<span class="fc" id="L102">    ResponseEntity&lt;JsonNode&gt; response =</span>
-<span class="fc" id="L103">        restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, JsonNode.class);</span>
-<span class="fc" id="L104">    JsonNode responseJson = response.getBody();</span>
-<span class="fc" id="L105">    ZonedDateTime creationDate = ZonedDateTime.parse(responseJson.get(&quot;created_at&quot;).asText());</span>
-<span class="fc" id="L106">    ZonedDateTime now = ZonedDateTime.from(provider.getNow().get());</span>
-<span class="fc" id="L107">    return new CourseWarning(creationDate.isAfter(now.minusMonths(1)));</span>
+<span class="fc" id="L98">    String ENDPOINT = &quot;https://api.github.com/orgs/&quot; + course.getOrgName();</span>
+<span class="fc" id="L99">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L100">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L101">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L102">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L103">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L104">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+<span class="fc" id="L105">    ResponseEntity&lt;JsonNode&gt; response =</span>
+<span class="fc" id="L106">        restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, JsonNode.class);</span>
+<span class="fc" id="L107">    JsonNode responseJson = response.getBody();</span>
+<span class="fc" id="L108">    ZonedDateTime creationDate = ZonedDateTime.parse(responseJson.get(&quot;created_at&quot;).asText());</span>
+<span class="fc" id="L109">    ZonedDateTime now = ZonedDateTime.from(provider.getNow().get());</span>
+<span class="fc" id="L110">    boolean showOrganizationAgeWarning = creationDate.isAfter(now.minusMonths(1));</span>
+<span class="fc" id="L111">    String defaultRepositoryPermission = getDefaultRepositoryPermission(course);</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">    boolean showDefaultBasePermissions = !&quot;none&quot;.equals(defaultRepositoryPermission);</span>
+<span class="fc" id="L113">    return new CourseWarning(showOrganizationAgeWarning, showDefaultBasePermissions);</span>
   }
 
   /**
@@ -118,16 +124,16 @@ public class OrganizationLinkerService {
           InvalidKeySpecException,
           JsonProcessingException,
           NoLinkedOrganizationException {
-<span class="fc" id="L121">    String ENDPOINT = &quot;https://api.github.com/orgs/&quot; + course.getOrgName();</span>
-<span class="fc" id="L122">    HttpHeaders headers = new HttpHeaders();</span>
-<span class="fc" id="L123">    String token = jwtService.getInstallationToken(course);</span>
-<span class="fc" id="L124">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
-<span class="fc" id="L125">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
-<span class="fc" id="L126">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
-<span class="fc" id="L127">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
-<span class="fc" id="L128">    ResponseEntity&lt;JsonNode&gt; response =</span>
-<span class="fc" id="L129">        restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, JsonNode.class);</span>
-<span class="fc" id="L130">    return response.getBody().get(&quot;default_repository_permission&quot;).asText();</span>
+<span class="fc" id="L127">    String ENDPOINT = &quot;https://api.github.com/orgs/&quot; + course.getOrgName();</span>
+<span class="fc" id="L128">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L129">    String token = jwtService.getInstallationToken(course);</span>
+<span class="fc" id="L130">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L131">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L132">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L133">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+<span class="fc" id="L134">    ResponseEntity&lt;JsonNode&gt; response =</span>
+<span class="fc" id="L135">        restTemplate.exchange(ENDPOINT, HttpMethod.GET, entity, JsonNode.class);</span>
+<span class="fc" id="L136">    return response.getBody().get(&quot;default_repository_permission&quot;).asText();</span>
   }
 
   /**
@@ -137,22 +143,22 @@ public class OrganizationLinkerService {
    */
   public void unenrollOrganization(Course course)
       throws NoSuchAlgorithmException, InvalidKeySpecException {
-<span class="fc bfc" id="L140" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
-<span class="fc" id="L141">      return;</span>
+<span class="fc bfc" id="L146" title="All 4 branches covered.">    if (course.getOrgName() == null || course.getInstallationId() == null) {</span>
+<span class="fc" id="L147">      return;</span>
     }
-<span class="fc" id="L143">    String token = jwtService.getJwt();</span>
-<span class="fc" id="L144">    String ENDPOINT = &quot;https://api.github.com/app/installations/&quot; + course.getInstallationId();</span>
-<span class="fc" id="L145">    HttpHeaders headers = new HttpHeaders();</span>
-<span class="fc" id="L146">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
-<span class="fc" id="L147">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
-<span class="fc" id="L148">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
-<span class="fc" id="L149">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
+<span class="fc" id="L149">    String token = jwtService.getJwt();</span>
+<span class="fc" id="L150">    String ENDPOINT = &quot;https://api.github.com/app/installations/&quot; + course.getInstallationId();</span>
+<span class="fc" id="L151">    HttpHeaders headers = new HttpHeaders();</span>
+<span class="fc" id="L152">    headers.add(&quot;Authorization&quot;, &quot;Bearer &quot; + token);</span>
+<span class="fc" id="L153">    headers.add(&quot;Accept&quot;, &quot;application/vnd.github+json&quot;);</span>
+<span class="fc" id="L154">    headers.add(&quot;X-GitHub-Api-Version&quot;, &quot;2022-11-28&quot;);</span>
+<span class="fc" id="L155">    HttpEntity&lt;String&gt; entity = new HttpEntity&lt;&gt;(headers);</span>
     try {
-<span class="fc" id="L151">      ResponseEntity&lt;String&gt; response =</span>
-<span class="fc" id="L152">          restTemplate.exchange(ENDPOINT, HttpMethod.DELETE, entity, String.class);</span>
-<span class="fc" id="L153">    } catch (HttpClientErrorException ignored) {</span>
+<span class="fc" id="L157">      ResponseEntity&lt;String&gt; response =</span>
+<span class="fc" id="L158">          restTemplate.exchange(ENDPOINT, HttpMethod.DELETE, entity, String.class);</span>
+<span class="fc" id="L159">    } catch (HttpClientErrorException ignored) {</span>
 
-<span class="fc" id="L155">    }</span>
-<span class="fc" id="L156">  }</span>
+<span class="fc" id="L161">    }</span>
+<span class="fc" id="L162">  }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
