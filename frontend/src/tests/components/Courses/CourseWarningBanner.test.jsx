@@ -1,7 +1,7 @@
 import AxiosMockAdapter from "axios-mock-adapter";
 import axios from "axios";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { CourseWarningBanner } from "main/components/Courses/CourseWarningBanner";
 import * as useBackend from "main/utils/useBackend";
 
@@ -157,5 +157,72 @@ describe("CourseWarningBanner tests", () => {
     expect(
       screen.queryByTestId("CourseWarningBanner-defaultBasePermission"),
     ).not.toBeInTheDocument();
+  });
+  test("clicking the hide button fires POST request and hides the warning banner", async () => {
+    vi.spyOn(useBackend, "useBackendMutation");
+
+    axiosMock.onGet("/api/courses/warnings/1").reply(200, {
+      showOrganizationAgeWarning: false,
+      showDefaultBasePermissions: true,
+    });
+
+    axiosMock
+      .onPost("/api/course/warnings/hideBasePermissionWarning/1")
+      .reply(200, "Warning for course with id 1 hidden");
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <CourseWarningBanner courseId={1} orgName="ucsb-cs156-s26" />
+      </QueryClientProvider>,
+    );
+
+    const warningElement = await screen.findByTestId(
+      "CourseWarningBanner-defaultBasePermission",
+    );
+    expect(warningElement).toBeInTheDocument();
+
+    const hideButton = screen.getByTestId(
+      "CourseWarningBanner-defaultBasePermission-hide-btn",
+    );
+
+    fireEvent.click(hideButton);
+
+    expect(useBackend.useBackendMutation).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.any(Object),
+      ["/api/courses/warnings/1"],
+    );
+
+    await waitFor(() => {
+      expect(axiosMock.history.post.length).toBe(1);
+    });
+    expect(axiosMock.history.post[0].url).toBe(
+      "/api/course/warnings/hideBasePermissionWarning/1",
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.queryByTestId("CourseWarningBanner-defaultBasePermission"),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  test("objectToExtensionMethod sets up the right URL and method", () => {
+    const spy = vi.spyOn(useBackend, "useBackendMutation");
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <CourseWarningBanner courseId={42} orgName="ucsb-cs156-s26" />
+      </QueryClientProvider>,
+    );
+
+    expect(spy).toHaveBeenCalled();
+    const objectToExtensionMethod = spy.mock.calls[0][0];
+    const result = objectToExtensionMethod(42);
+
+    expect(result).toEqual({
+      url: "/api/course/warnings/hideBasePermissionWarning/42",
+      method: "POST",
+    });
   });
 });
