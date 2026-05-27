@@ -167,7 +167,7 @@ describe("CourseWarningBanner tests", () => {
     });
 
     axiosMock
-      .onPost("/api/course/warnings/hideBasePermissionWarning/1")
+      .onPost("/api/courses/warnings/hideBasePermissionWarning/1")
       .reply(200, "Warning for course with id 1 hidden");
 
     render(
@@ -184,9 +184,9 @@ describe("CourseWarningBanner tests", () => {
     const hideButton = screen.getByTestId(
       "CourseWarningBanner-defaultBasePermission-hide-btn",
     );
-    
+
     fireEvent.click(hideButton);
-    
+
     expect(useBackend.useBackendMutation).toHaveBeenCalledWith(
       expect.any(Function),
       expect.any(Object),
@@ -197,7 +197,7 @@ describe("CourseWarningBanner tests", () => {
       expect(axiosMock.history.post.length).toBe(1);
     });
     expect(axiosMock.history.post[0].url).toBe(
-      "/api/course/warnings/hideBasePermissionWarning/1",
+      "/api/courses/warnings/hideBasePermissionWarning/1",
     );
 
     await waitFor(() => {
@@ -221,7 +221,7 @@ describe("CourseWarningBanner tests", () => {
     const result = objectToExtensionMethod(42);
 
     expect(result).toEqual({
-      url: "/api/course/warnings/hideBasePermissionWarning/42",
+      url: "/api/courses/warnings/hideBasePermissionWarning/42",
       method: "POST",
     });
   });
