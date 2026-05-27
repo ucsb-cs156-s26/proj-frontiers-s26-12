@@ -184,9 +184,9 @@ describe("CourseWarningBanner tests", () => {
     const hideButton = screen.getByTestId(
       "CourseWarningBanner-defaultBasePermission-hide-btn",
     );
-
+    
     fireEvent.click(hideButton);
-
+    
     expect(useBackend.useBackendMutation).toHaveBeenCalledWith(
       expect.any(Function),
       expect.any(Object),

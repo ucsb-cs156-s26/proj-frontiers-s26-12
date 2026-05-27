@@ -10,7 +10,7 @@ export function CourseWarningBanner({
   const [isLocallyHidden, setIsLocallyHidden] = useState(false);
 
   const objectToExtensionMethod = (courseId) => ({
-    url: `/api/course/warnings/hideBasePermissionWarning/${courseId}`,
+    url: `/api/courses/warnings/hideBasePermissionWarning/${courseId}`,
     method: "POST",
   });
 
