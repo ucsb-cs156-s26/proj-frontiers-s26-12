@@ -4,10 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { expect, vi } from "vitest";
 import coursesFixtures from "fixtures/coursesFixtures";
 
-
 const mockToast = vi.fn();
-
-const useBackendMutationSpy = vi.spyOn(useBackendModule, "useBackendMutation");
 
 vi.mock("react-toastify", async (importOriginal) => {
   return {
@@ -51,7 +48,7 @@ describe("DownloadsTabComponent tests", () => {
     render(
       <QueryClientProvider client={client}>
         <DownloadsTabComponent
-          courseId={coursesFixtures.severalCourses[0].id} 
+          courseId={coursesFixtures.severalCourses[0].id}
           testIdPrefix="InstructorCourseShowPage"
         />
       </QueryClientProvider>,
